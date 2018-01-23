@@ -57,16 +57,16 @@ func getArgs() ( uploadName, listDir string, runIndexer bool ){
     // get command line arguments
     var reindex *bool
     reindex = flag.Bool("r", false, "re-index list directory")
+    inFile  := flag.String("if","", "specify input file with full path")
+    outDir := flag.String("of","", "specify output list directory")
     flag.Parse();
 
-    args := flag.Args()
-    //fmt.Println(args)
-    if len( args ) < 2 {
-        fmt.Println("Usage: suppression <inputFile> <outputDirectory>")
+    if *inFile == "" || *outDir == "" {
+        fmt.Println("Usage: suppression [-r] -if=<inputFile> -of=<outputDirectory>")
         os.Exit(0);
     }else{
-        uploadName = args[0]
-        listDir = args[1]
+        uploadName = *inFile
+        listDir = *outDir
         runIndexer = *reindex
     }
     return 
