@@ -37,7 +37,6 @@ func (index ind) add(value string) {
 * @return nil
  */
 func (index ind) write() {
-	fmt.Println(index.name)
 	if _, err := os.Stat(index.name); os.IsNotExist(err) {
 		indexFile, err := os.Create(index.name)
 		if err != nil {

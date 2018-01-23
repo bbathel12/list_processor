@@ -35,7 +35,7 @@ func main(){
 
     // save the index
     timeWrite := time.Now()
-    index.write()
+    go index.write()
     timeAfterWrite := time.Now()
     totalTimeWrite := timeAfterWrite.Sub( timeWrite );
     fmt.Println( "Time write index")
@@ -45,7 +45,7 @@ func main(){
         timeWriteHashes := time.Now()
         writeNewHashes( listDir, newHashes )
         timeAfterWriteHashes := time.Now()
-        totalTimeHashes := timeWriteHashes.Sub( timeAfterWriteHashes )
+        totalTimeHashes := timeAfterWriteHashes.Sub( timeWriteHashes )
         fmt.Println( "Time write hashes")
         fmt.Println(totalTimeHashes)
     }

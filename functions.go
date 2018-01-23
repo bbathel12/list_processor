@@ -7,6 +7,7 @@ import (
     "regexp"
     "strings"
     "time"
+    "crypto/md5"
 )
 
 /*
@@ -65,16 +66,32 @@ func getArgs() ( uploadName, listDir string ){
 
 func scanUpload(index ind, upload *os.File) (recs, newRecs, dupes int , newHashes []string ){
     // scan through the file and get stuff
+    var trimmed string
     scanner := bufio.NewScanner(upload)
     for scanner.Scan(){
         line := scanner.Text()
-        if trimmed := strings.TrimSpace(line); isMd5( trimmed ) {
+        trimmed = strings.TrimSpace(line);
+        if  isMd5( trimmed ) {
             if index.contains( trimmed ){
                 recs++
                 dupes++
             }else{
                 newHashes = append( newHashes, trimmed )
                 index.add( trimmed )
+                recs++
+                newRecs++
+            }
+        }else{
+            //trimmed = fmt.Sprintf("%v",trimmed)
+            bytes := []byte(trimmed)
+            hashedBytes := md5.Sum( bytes )
+            hashedTrimmed := fmt.Sprintf( "%x", hashedBytes )
+            if index.contains( hashedTrimmed ){
+                recs++
+                dupes++
+            }else{
+                newHashes = append( newHashes, hashedTrimmed )
+                index.add( hashedTrimmed )
                 recs++
                 newRecs++
             }
