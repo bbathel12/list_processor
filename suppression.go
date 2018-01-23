@@ -22,12 +22,12 @@ func main(){
 
     // get upload file pointers 
     // close file once the function is done
-    upload := openUpload(uploadName)
-    defer upload.Close()
+    // upload := openUpload(uploadName)
+    // defer upload.Close()
     
     // read through the file an get info
     timeScan := time.Now()
-    recs, newRecs, dupes, newHashes = scanUpload( index, upload )
+    recs, newRecs, dupes, newHashes = scanUpload( index, uploadName )
     timeAfterScan := time.Now()
     totalTimeScan := timeAfterScan.Sub( timeScan )
     fmt.Println( "Time Scan")

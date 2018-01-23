@@ -1,13 +1,14 @@
 package main
 
 import (
-    "fmt"
-    "os"
     "bufio"
+    "crypto/md5"
+    "fmt"
+    "io/ioutil"
+    "os"
     "regexp"
     "strings"
     "time"
-    "crypto/md5"
 )
 
 /*
@@ -64,12 +65,17 @@ func getArgs() ( uploadName, listDir string ){
     return 
 }
 
-func scanUpload(index ind, upload *os.File) (recs, newRecs, dupes int , newHashes []string ){
+func scanUpload(index ind, uploadName string) (recs, newRecs, dupes int , newHashes []string ){
     // scan through the file and get stuff
     var trimmed string
-    scanner := bufio.NewScanner(upload)
-    for scanner.Scan(){
-        line := scanner.Text()
+    uploadBytes, err := ioutil.ReadFile(uploadName)
+    uploadString := string(uploadBytes)
+    if err != nil{
+        panic( err )
+    }
+    splitUpload := strings.Split(uploadString, "\n")
+    for _, line := range splitUpload {
+        if line == "" { continue }
         trimmed = strings.TrimSpace(line);
         if  isMd5( trimmed ) {
             if index.contains( trimmed ){
@@ -96,9 +102,9 @@ func scanUpload(index ind, upload *os.File) (recs, newRecs, dupes int , newHashe
                 newRecs++
             }
         }
-        if err := scanner.Err(); err != nil{
-            panic(err)
-        }
+        // if err := scanner.Err(); err != nil{
+        //     panic(err)
+        // }
     }
     return 
 }
