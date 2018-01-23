@@ -7,7 +7,7 @@ import (
     "fmt"
     "io/ioutil"
     "os"
-    "regexp"
+    _"regexp"
     "strings"
     "time"
 )
@@ -45,8 +45,8 @@ func openWriteFile(listDir string) (outFile *os.File) {
 * @param line string
 * @return match bool
 */
-func isMd5(line string) (match bool) {
-    match, _ = regexp.MatchString("[A-Fa-f0-9]{32}", line)
+func isMd5( line string ) (match bool) {
+    match = md5Regex.MatchString( line )
     return 
 }
 
@@ -81,9 +81,11 @@ func getArgs() ( uploadName, listDir string, runIndexer bool ){
 * @return recs, newRecs, dupes int: number of total records, new records, and duplicate records
 * @return newHashes []string: an array of all new hashes
 */
-func scanUpload(index ind, uploadName string) (recs, newRecs, dupes int , newHashes []string ){
+func scanUpload(index ind, uploadName string) {
     // scan through the file and get stuff
     var trimmed string
+    var recs, dupes, newRecs int
+
     uploadBytes, err := ioutil.ReadFile(uploadName)
     uploadString := string(uploadBytes)
     if err != nil{
@@ -98,7 +100,8 @@ func scanUpload(index ind, uploadName string) (recs, newRecs, dupes int , newHas
                 recs++
                 dupes++
             }else{
-                newHashes = append( newHashes, trimmed )
+                newHashChan <- trimmed
+                //newHashes = append( newHashes, trimmed )
                 index.add( trimmed )
                 recs++
                 newRecs++
@@ -112,14 +115,16 @@ func scanUpload(index ind, uploadName string) (recs, newRecs, dupes int , newHas
                 recs++
                 dupes++
             }else{
-                newHashes = append( newHashes, hashedTrimmed )
+                newHashChan <- hashedTrimmed
+                //newHashes = append( newHashes, hashedTrimmed )
                 index.add( hashedTrimmed )
                 recs++
                 newRecs++
             }
         }
     }
-    return 
+    close( newHashChan )
+    fmt.Printf( "Records: %v New: %v Dupes: %v\n", recs, newRecs, dupes )
 }
 
 /*
@@ -127,16 +132,21 @@ func scanUpload(index ind, uploadName string) (recs, newRecs, dupes int , newHas
 * @param listDir string: directory of the unique list
 * @param newHashes []string: an array containing all hashes to write
 */
-func writeNewHashes( listDir string, newHashes []string ) {
+func writeNewHashes( listDir string ) {
     outFile := openWriteFile(listDir)
     writer := bufio.NewWriter(outFile)
-    for _, v := range newHashes{
-        
+    for {
+        v, ok :=  <-newHashChan;
+        if( !ok ){
+            scanDone <- true
+            break
+        }
         line := fmt.Sprintf( "%v\n", v )
         writer.WriteString( line )
-        
+        writer.Flush()
+
     }
-    writer.Flush()
+    
     defer outFile.Close()
 }
 
