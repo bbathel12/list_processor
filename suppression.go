@@ -9,16 +9,31 @@ func main(){
     var listDir, uploadName string
     var recs, dupes, newRecs int
     var newHashes []string
+    var runIndexer bool
 
     // get command line arguments
-    uploadName, listDir = getArgs()
-
+    uploadName, listDir, runIndexer = getArgs()
+   
     // create index
     index := ind{
-        name:listDir+"index",
+        name:listDir+"GoIndex",
         storage:map[string][]string{},
     }
-    index.open(listDir)
+    
+
+
+    if runIndexer{
+        timeReindex := time.Now()
+        index = reindex( listDir, index )
+        timeAfterReindex := time.Now()
+        totalTimeReindex := timeAfterReindex.Sub( timeReindex )
+        fmt.Println( "Time Reindex")
+        fmt.Println( totalTimeReindex )
+    }else{
+        index.open(listDir)
+    }
+
+    
 
     // get upload file pointers 
     // close file once the function is done

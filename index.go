@@ -62,8 +62,7 @@ func (index ind) write() {
 * @return err error
  */
 func (index ind) open(listDir string) (err error) {
-	filename := listDir + "index"
-	index.name = filename
+	filename := index.name
 	if _, err := os.Stat(filename); !os.IsNotExist(err) {
 		indexFile, _ := os.Open(filename)
 		d := gob.NewDecoder(indexFile)
