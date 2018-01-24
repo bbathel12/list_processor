@@ -12,6 +12,7 @@ import(
 )
 
 var newHashChan chan string = make (chan string)
+var addNewHashesChan chan string = make (chan string)
 var scanDone chan bool = make (chan bool)
 var md5Regex, _ = regexp.Compile("^[a-f0-9]{32}$")
 var usage = "Usage: suppression [-r] -if=<inputFile> -of=<outputDirectory>"
@@ -65,13 +66,12 @@ func main(){
     // defer upload.Close()
 
     go writeNewHashes( listDir )
-
-
+    go addNewHashes( &index)
     
     
     // read through the file an get info
     timeScan := time.Now()
-    scanUpload( index, uploadName )
+    scanUpload( &index, uploadName )
     timeAfterScan := time.Now()
     totalTimeScan := timeAfterScan.Sub( timeScan )
     fmt.Println( "Time Scan")

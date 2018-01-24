@@ -7,7 +7,10 @@ import (
 	_ "io"
 	"io/ioutil"
 	"os"
+    "sync"
 )
+
+var lock = sync.RWMutex{}
 
 type ind struct {
 	storage map[string][]string
@@ -22,6 +25,7 @@ index method to add a key value pair to the storage
 func (index *ind) add(value string) {
 	var halfhash string
 
+
 	half := len(value) / 2
 	if half <= 0 {
 		halfhash = value
@@ -29,6 +33,8 @@ func (index *ind) add(value string) {
 		halfhash = value[:half]
 	}
 
+    lock.Lock()
+    defer lock.Unlock()
 	index.storage[halfhash] = append(index.storage[halfhash], value)
 }
 
@@ -91,6 +97,9 @@ func (index *ind) contains(line string) bool {
 		halfhash = line[:half]
 	}
 
+    lock.RLock()
+    defer lock.RUnlock()
+
 	if _, ok := index.storage[halfhash]; ok {
 		for _, v := range index.storage[halfhash] {
 			if line == v {
@@ -98,5 +107,6 @@ func (index *ind) contains(line string) bool {
 			}
 		}
 	}
+    
 	return false
 }

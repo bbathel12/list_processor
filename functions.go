@@ -40,13 +40,22 @@ func openWriteFile(listDir string) (outFile *os.File) {
     return 
 }
 
+
 /*
-* takes string to determin if it is Md5 encoded or not
+* takes string trims and lowercases it, converts to md5 if not md5
 * @param line string
 * @return match bool
 */
-func isMd5( line string ) (match bool) {
-    match = md5Regex.MatchString( line )
+func forceMd5( line string ) ( hashedTrimmed string ) {
+    hashedTrimmed = strings.TrimSpace(line)
+    hashedTrimmed = strings.ToLower(line)
+
+    if !md5Regex.MatchString( hashedTrimmed ){
+        bytes := []byte(hashedTrimmed)
+        hashedBytes := md5.Sum( bytes )
+        hashedTrimmed = fmt.Sprintf( "%x", hashedBytes )
+    }
+
     return 
 }
 
@@ -81,9 +90,9 @@ func getArgs() ( uploadName, listDir string, runIndexer bool ){
 * @return recs, newRecs, dupes int: number of total records, new records, and duplicate records
 * @return newHashes []string: an array of all new hashes
 */
-func scanUpload(index ind, uploadName string) {
+func scanUpload(index *ind, uploadName string) {
     // scan through the file and get stuff
-    var trimmed string
+    var hashedTrimmed string
     var recs, dupes, newRecs int
 
     uploadBytes, err := ioutil.ReadFile(uploadName)
@@ -94,33 +103,16 @@ func scanUpload(index ind, uploadName string) {
     splitUpload := strings.Split(uploadString, "\n")
     for _, line := range splitUpload {
         if line == "" { continue }
-        trimmed = strings.TrimSpace(line);
-        if  isMd5( trimmed ) {
-            if index.contains( trimmed ){
-                recs++
-                dupes++
-            }else{
-                newHashChan <- trimmed
-                //newHashes = append( newHashes, trimmed )
-                index.add( trimmed )
-                recs++
-                newRecs++
-            }
+        hashedTrimmed = forceMd5( line ) 
+        if index.contains( hashedTrimmed ){
+            recs++
+            dupes++
         }else{
-            //trimmed = fmt.Sprintf("%v",trimmed)
-            bytes := []byte(trimmed)
-            hashedBytes := md5.Sum( bytes )
-            hashedTrimmed := fmt.Sprintf( "%x", hashedBytes )
-            if index.contains( hashedTrimmed ){
-                recs++
-                dupes++
-            }else{
-                newHashChan <- hashedTrimmed
-                //newHashes = append( newHashes, hashedTrimmed )
-                index.add( hashedTrimmed )
-                recs++
-                newRecs++
-            }
+            newHashChan <- hashedTrimmed
+            addNewHashesChan <- hashedTrimmed
+            //index.add( hashedTrimmed )
+            recs++
+            newRecs++
         }
     }
     close( newHashChan )
@@ -150,6 +142,25 @@ func writeNewHashes( listDir string ) {
     defer outFile.Close()
 }
 
+/*
+* writes all newHashes to the a timestamped file in listDir
+* @param listDir string: directory of the unique list
+* @param newHashes []string: an array containing all hashes to write
+*/
+func addNewHashes( index *ind ) {
+
+    for {
+        v, ok :=  <-addNewHashesChan;
+        if( !ok ){
+            scanDone <- true
+            break
+        }
+        index.add(v)
+
+    }
+
+}
+
 
 
 /*
@@ -165,28 +176,19 @@ func reindex(listDir string, index ind ) ind {
     for _, file := range files{
         if name := file.Name(); strings.Contains(name,".md5") || strings.Contains(name, ".txt"){
             // scan through the file and add to index but don't write lists.
-            var trimmed string
             fileWithPath := listDir+name
             uploadBytes, err := ioutil.ReadFile(fileWithPath)
             uploadString := string(uploadBytes)
+
             if err != nil{
                 panic( err )
             }
             splitUpload := strings.Split(uploadString, "\n")
             for _, line := range splitUpload {
                 if line == "" { continue }
-                trimmed = strings.TrimSpace(line);
-                if  isMd5( trimmed ) {
-                    if !index.contains( trimmed ){
-                        index.add( trimmed )
-                    }
-                }else{
-                    bytes := []byte(trimmed)
-                    hashedBytes := md5.Sum( bytes )
-                    hashedTrimmed := fmt.Sprintf( "%x", hashedBytes )
-                    if !index.contains( hashedTrimmed ){
-                        index.add( hashedTrimmed )
-                    }
+                hashedTrimmed := forceMd5( line ) 
+                if !index.contains( hashedTrimmed ){
+                    index.add( hashedTrimmed )
                 }
             }
         }

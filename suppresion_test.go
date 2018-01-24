@@ -21,7 +21,7 @@ func Test_openIndex(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println(index.storage)
+	//fmt.Println(index.storage)
 }
 
 func Test_openWriteFile(t *testing.T) {
@@ -38,16 +38,48 @@ func Test_add(t *testing.T) {
 		"two":   "twotwo",
 		"three": "threethree",
 	}
+    // duplicates to test duplicate rejection
+    testKeyValues2 := map[string]string{
+        "one": "oneone",
+        "two": "twotwo",
+        "three": "threethree",
+    }
+    // new to test adding new keys to existing index
+    testKeyValues3 := map[string]string{
+        "four": "fourfour",
+        "five": "fivefive",
+        "six": "sixsix",
+    }
 	for _, v := range testKeyValues {
 		testIndex.add(v)
 	}
 
+    for _, v := range testKeyValues2 {
+        testIndex.add(v)
+    }
+
+    if len(testIndex.storage) > 3 {
+        t.Error("added duplicate")
+    }
+
+    for _, v := range testKeyValues3 {
+        testIndex.add(v)
+    }
+
+    
 	for k, _ := range testKeyValues {
 		if _, ok := testIndex.storage[k]; !ok {
 			errorString := fmt.Sprintf("key %s not found ", k)
 			t.Error(errorString)
 		}
 	}
+    for k, _ := range testKeyValues3 {
+        if _, ok := testIndex.storage[k]; !ok {
+            errorString := fmt.Sprintf("key %s not found ", k)
+            t.Error(errorString)
+        }
+    }
+
 
 }
 
@@ -65,23 +97,18 @@ func Test_writeIndex(t *testing.T) {
 }
 
 func Test_isMd5(t *testing.T) {
-	linesNotMd5 := []string{
-		"brice@gmail.com",
-		"gmail.com",
-		"*.tld",
-	}
-	linesMd5 := []string{
+	
+	tests := []string{
 		"4A8A08F09D37B73795649038408B5F33",
 		"8277E0910D750195B448797616E091AD",
 		"E1671797C52E15F763380B45E841EC32",
+        "brice@gmail.com",
+        "gmail.com",
+        "*.tld",
 	}
-	for _, v := range linesNotMd5 {
-		if isMd5(v) {
-			t.Error(v + " is not Md5")
-		}
-	}
-	for _, v := range linesMd5 {
-		if !isMd5(v) {
+	for _, v := range tests {
+        hashedTrimmed := forceMd5(v)
+		if !md5Regex.MatchString( hashedTrimmed ) {
 			t.Error(v + " is not Md5")
 		}
 	}
