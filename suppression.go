@@ -1,3 +1,7 @@
+//Suppression Package
+//  Checks uploaded files, builds index, removes duplicates and
+//  writes new records to directory
+//      Usage: suppression [-r] -if=<inputFile> -of=<outputDirectory>:
 package main
 
 import(
@@ -7,10 +11,15 @@ import(
 
 )
 
-var newHashChan chan string
-var scanDone chan bool
+var newHashChan chan string = make (chan string)
+var scanDone chan bool = make (chan bool)
 var md5Regex, _ = regexp.Compile("^[a-f0-9]{32}$")
+var usage = "Usage: suppression [-r] -if=<inputFile> -of=<outputDirectory>"
 
+
+/*
+
+*/
 func main(){
     var listDir, uploadName string
     
@@ -22,9 +31,6 @@ func main(){
 
     // get command line arguments
     uploadName, listDir, runIndexer = getArgs()
-
-    newHashChan = make (chan string)
-    scanDone = make (chan bool)
 
     // create index
     index := ind{
@@ -58,12 +64,8 @@ func main(){
     // upload := openUpload(uploadName)
     // defer upload.Close()
 
-    timeWriteHashes := time.Now()
     go writeNewHashes( listDir )
-    timeAfterWriteHashes := time.Now()
-    totalTimeHashes := timeAfterWriteHashes.Sub( timeWriteHashes )
-    fmt.Println( "Time write hashes")
-    fmt.Println(totalTimeHashes)
+
 
     
     

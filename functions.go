@@ -62,7 +62,7 @@ func getArgs() ( uploadName, listDir string, runIndexer bool ){
     flag.Parse();
 
     if *inFile == "" || *outDir == "" {
-        fmt.Println("Usage: suppression [-r] -if=<inputFile> -of=<outputDirectory>")
+        fmt.Println(usage)
         os.Exit(0);
     }else{
         uploadName = *inFile

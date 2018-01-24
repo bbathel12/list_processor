@@ -15,11 +15,11 @@ type ind struct {
 }
 
 /*
-* index method to add a key value pair to the storage
-* @param key string
-* @param value string
- */
-func (index ind) add(value string) {
+index method to add a key value pair to the storage
+@param key string
+@param value string
+*/
+func (index *ind) add(value string) {
 	var halfhash string
 
 	half := len(value) / 2
@@ -35,8 +35,8 @@ func (index ind) add(value string) {
 /*
 * writes encoded gob to file named index in the list directory
 * @return nil
- */
-func (index ind) write() {
+*/
+func (index *ind) write() {
 	if _, err := os.Stat(index.name); os.IsNotExist(err) {
 		indexFile, err := os.Create(index.name)
 		if err != nil {
@@ -60,8 +60,8 @@ func (index ind) write() {
 * @param listDir string: the directory of the list being updated
 * @return index ind
 * @return err error
- */
-func (index ind) open(listDir string) (err error) {
+*/
+func (index *ind) open(listDir string) (err error) {
 	filename := index.name
 	if _, err := os.Stat(filename); !os.IsNotExist(err) {
 		indexFile, _ := os.Open(filename)
@@ -80,8 +80,8 @@ func (index ind) open(listDir string) (err error) {
 
 /*
 * checks if hash is already in storage returns bool
- */
-func (index ind) contains(line string) bool {
+*/
+func (index *ind) contains(line string) bool {
 	var halfhash string
 
 	half := len(line) / 2
