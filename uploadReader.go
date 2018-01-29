@@ -6,7 +6,7 @@ import(
 )
 
 
-func readUpload( index *ind, uploadName string, lineChan *chan string ){
+func readUpload(  uploadName string, lineChan *chan string ){
 	uploadBytes, err := ioutil.ReadFile(uploadName)
     uploadString := string(uploadBytes)
     if err != nil{

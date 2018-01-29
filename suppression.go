@@ -67,7 +67,7 @@ func main() {
 	index = newIndex(listDir + "/GoIndex")
 	index.open()
 
-	go readUpload(index, uploadName, &lineChan)
+	go readUpload( uploadName, &lineChan)
 	go forceMd5(&lineChan, &hashedLineChan)
 	go checkIndex(&recs, &newRecs, &dupes, index, &hashedLineChan, &newHashChan)
 	go writeNewHashes(listDir, &newHashChan, &scanDone)

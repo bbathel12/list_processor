@@ -55,17 +55,22 @@ func openWriteFile(listDir string) (outFile *os.File) {
 * @param newHashes []string: an array containing all hashes to write
  */
 func writeNewHashes(listDir string, newHashChan *chan string, scanDone *chan bool) {
-	outFile := openWriteFile(listDir)
-	writer := bufio.NewWriter(outFile)
+    var outFile *os.File
+    var writer *bufio.Writer
+    
 	for {
-		v, ok := <-*newHashChan
-		if !ok {
+		if v, ok := <-*newHashChan; ok {
+            if( outFile == nil ){
+                outFile = openWriteFile(listDir)
+                writer = bufio.NewWriter(outFile)
+            }
+            line := fmt.Sprintf("%v\n", v)
+            writer.WriteString(line)
+            writer.Flush()
+        }else{
 			*scanDone <- true
 			break
 		}
-		line := fmt.Sprintf("%v\n", v)
-		writer.WriteString(line)
-		writer.Flush()
 	}
 
 	defer outFile.Close()
