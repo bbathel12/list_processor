@@ -15,8 +15,8 @@ import (
 var wg sync.WaitGroup
 
 //Consts
-const usage string = "Usage: suppression [-r -h -b] -if=<inputFile> -of=<outputDirectory>"
-const workers int = 10
+const usage string = "Usage: suppression [-r -h -b -w] -if=<inputFile> -of=<outputDirectory>"
+
 //Regex
 var md5Regex, _ = regexp.Compile("^[a-f0-9]{32}$")
 
@@ -28,7 +28,7 @@ var newHashChan chan string
 var scanDone chan bool = make(chan bool) // not buffered to keep main routine from finishing
 
 //ints
-var recs, newRecs, dupes int
+var recs, newRecs, dupes, workers int
 
 //strings
 var listDir, uploadName string
@@ -42,11 +42,11 @@ var index *ind
 
 func init() {
 	// get command line arguments
-	uploadName, listDir, _, profile, buffersize = getArgs()
+	uploadName, listDir, _, profile, buffersize, workers = getArgs()
 	lineChan = make(chan string, buffersize)
 	hashedLineChan = make(chan string, buffersize)
 	newHashChan = make(chan string, buffersize)
-
+    recs, newRecs, dupes = 0, 0, 0
     wg.Add(workers)
 
 }
@@ -68,21 +68,24 @@ func main() {
 		defer f.Close()
 	}
 
-	recs, newRecs, dupes = 0, 0, 0
+	
 
 	index = newIndex(listDir + "/GoIndex")
 	index.open()
 
 	go readUpload( uploadName, &lineChan)
 
+    // spawn workers for forcing Md5 on lineChan
     for i := 0 ; i < workers; i++{
         go forceMd5(&lineChan, &hashedLineChan)
     }
 
 	go checkIndex(&recs, &newRecs, &dupes, index, &hashedLineChan, &newHashChan)
 	go writeNewHashes(listDir, &newHashChan, &scanDone)
-    wg.Wait()
-    close( hashedLineChan )
+    
+    wg.Wait()              // wait for all forceMd5 routines to 
+    close( hashedLineChan )//close hashedLineChan which allows checkIndex to finish
+
 	<-scanDone
 
 	index.write()

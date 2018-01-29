@@ -11,25 +11,30 @@ import (
 /*
 * get command line arguments or die with usage help
  */
-func getArgs() (uploadName, listDir string, runIndexer, profile bool, buffersize int) {
+func getArgs() (uploadName, listDir string, runIndexer, profile bool, buffersize, workers int) {
 	// get command line arguments
-
+    flag.Usage = func(){
+        fmt.Println(usage);
+        flag.PrintDefaults();
+    }
 	reindex := flag.Bool("r", false, "re-index list directory")
 	inFile := flag.String("if", "", "specify input file with full path")
 	outDir := flag.String("of", "", "specify output list directory")
 	runProfiler := flag.Bool("p", false, "run profiler")
 	buffer := flag.Int("b", 100, "size of buffered channels")
+    workerPoolSize := flag.Int("w",2,"number of force md5 workers going")
 	flag.Parse()
 
 	if *inFile == "" || *outDir == "" {
-		fmt.Println(usage)
-		os.Exit(0)
+		flag.Usage();
+        os.Exit(1);
 	} else {
 		uploadName = *inFile
 		listDir = *outDir
 		runIndexer = *reindex
 		profile = *runProfiler
 		buffersize = *buffer
+        workers = *workerPoolSize
 	}
 	return
 }
