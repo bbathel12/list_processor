@@ -4,17 +4,28 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
-	_ "io"
 	"io/ioutil"
 	"os"
-    "sync"
 )
 
-var lock = sync.RWMutex{}
+
 
 type ind struct {
 	storage map[string][]string
 	name    string
+}
+
+
+/*
+* constructor for index type
+* @param name string
+* return index ind
+*/
+func newIndex(name string) (index *ind){
+	index = new(ind)
+	index.name = name
+	index.storage = map[string][]string{}
+	return
 }
 
 /*
@@ -33,8 +44,6 @@ func (index *ind) add(value string) {
 		halfhash = value[:half]
 	}
 
-    lock.Lock()
-    defer lock.Unlock()
 	index.storage[halfhash] = append(index.storage[halfhash], value)
 }
 
@@ -67,7 +76,7 @@ func (index *ind) write() {
 * @return index ind
 * @return err error
 */
-func (index *ind) open(listDir string) (err error) {
+func (index *ind) open() (err error) {
 	filename := index.name
 	if _, err := os.Stat(filename); !os.IsNotExist(err) {
 		indexFile, _ := os.Open(filename)
@@ -97,8 +106,6 @@ func (index *ind) contains(line string) bool {
 		halfhash = line[:half]
 	}
 
-    lock.RLock()
-    defer lock.RUnlock()
 
 	if _, ok := index.storage[halfhash]; ok {
 		for _, v := range index.storage[halfhash] {

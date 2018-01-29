@@ -1,95 +1,98 @@
-//Suppression Package
-//  Checks uploaded files, builds index, removes duplicates and
-//  writes new records to directory
-//      Usage: suppression [-r] -if=<inputFile> -of=<outputDirectory>:
 package main
 
-import(
-    "fmt"
-    "regexp"
-    "time"
-
+import (
+	"fmt"
+	"log"
+	"os"
+	"regexp"
+	"runtime"
+	"runtime/pprof"
+	"time"
 )
 
-var newHashChan chan string = make (chan string)
-var addNewHashesChan chan string = make (chan string)
-var scanDone chan bool = make (chan bool)
+//Consts
+const usage string = "Usage: suppression [-r -h -b] -if=<inputFile> -of=<outputDirectory>"
+
+//Regex
 var md5Regex, _ = regexp.Compile("^[a-f0-9]{32}$")
-var usage = "Usage: suppression [-r] -if=<inputFile> -of=<outputDirectory>"
 
+//Channels bufffered seems faster
+var buffersize int
+var lineChan chan string
+var hashedLineChan chan string
+var newHashChan chan string
+var scanDone chan bool = make(chan bool) // not buffered to keep main routine from finishing
 
-/*
+//ints
+var recs, newRecs, dupes int
 
-*/
-func main(){
-    var listDir, uploadName string
-    
-    //var newHashes []string
-    var runIndexer bool
+//strings
+var listDir, uploadName string
 
-    
+//bools make reindexing work later
+//var reindex bool
+var profile bool
 
+//index
+var index *ind
 
-    // get command line arguments
-    uploadName, listDir, runIndexer = getArgs()
+func init() {
+	// get command line arguments
+	uploadName, listDir, _, profile, buffersize = getArgs()
+	lineChan = make(chan string, buffersize)
+	hashedLineChan = make(chan string, buffersize)
+	newHashChan = make(chan string, buffersize)
 
-    // create index
-    index := ind{
-        name:listDir+"GoIndex",
-        storage:map[string][]string{},
-    }
-    
+}
 
-    if runIndexer{
-        timeReindex := time.Now()
-        index = reindex( listDir, index )
-        timeAfterReindex := time.Now()
-        totalTimeReindex := timeAfterReindex.Sub( timeReindex )
-        fmt.Println( "Time Reindex")
-        fmt.Println( totalTimeReindex )
-    }else{
-        fmt.Println("Opening Index")
-        timeOpenIndex := time.Now()
-        index.open(listDir)
-        timeAfterOpenIndex := time.Now()
-        totalTimeOpenIndex:= timeAfterOpenIndex.Sub( timeOpenIndex )
-        fmt.Println( "Time open index")
-        fmt.Println(totalTimeOpenIndex)
+func main() {
 
-    }
+	start := time.Now()
 
-    
+	if profile {
+		//Profiling
+		f, err := os.Create("./profile/cpu")
+		if err != nil {
+			log.Fatal("could not create CPU profile: ", err)
+		}
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal("could not start CPU profile: ", err)
+		}
+		defer pprof.StopCPUProfile()
+		defer f.Close()
+	}
 
-    // get upload file pointers 
-    // close file once the function is done
-    // upload := openUpload(uploadName)
-    // defer upload.Close()
+	recs, newRecs, dupes = 0, 0, 0
 
-    go writeNewHashes( listDir )
-    go addNewHashes( &index)
-    
-    
-    // read through the file an get info
-    timeScan := time.Now()
-    scanUpload( &index, uploadName )
-    timeAfterScan := time.Now()
-    totalTimeScan := timeAfterScan.Sub( timeScan )
-    fmt.Println( "Time Scan")
-    fmt.Println( totalTimeScan )
+	index = newIndex(listDir + "/GoIndex")
+	index.open()
 
-    
-    <-scanDone
-    // save the index
-    timeWrite := time.Now()
-    index.write()
-    timeAfterWrite := time.Now()
-    totalTimeWrite := timeAfterWrite.Sub( timeWrite );
-    fmt.Println( "Time write index")
-    fmt.Println( totalTimeWrite )
+	go readUpload(index, uploadName, &lineChan)
+	go forceMd5(&lineChan, &hashedLineChan)
+	go checkIndex(&recs, &newRecs, &dupes, index, &hashedLineChan, &newHashChan)
+	go writeNewHashes(listDir, &newHashChan, &scanDone)
 
-    
-   
-   
-    //fmt.Println( index.storage )    
+	<-scanDone
+
+	index.write()
+
+	end := time.Now()
+	total := end.Sub(start)
+	fmt.Printf("Time Total: ")
+	fmt.Println(total)
+	fmt.Printf("Recs: %d New Recs: %d Dupes: %d ", recs, newRecs, dupes)
+
+	if profile {
+		//memory profiling
+		fmem, err := os.Create("./profile/memory")
+		if err != nil {
+			log.Fatal("could not create memory profile: ", err)
+		}
+		runtime.GC() // get up-to-date statistics
+		if err := pprof.WriteHeapProfile(fmem); err != nil {
+			log.Fatal("could not write memory profile: ", err)
+		}
+		fmem.Close()
+	}
 
 }
