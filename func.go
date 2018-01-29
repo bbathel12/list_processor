@@ -58,20 +58,19 @@ func writeNewHashes(listDir string, newHashChan *chan string, scanDone *chan boo
     var outFile *os.File
     var writer *bufio.Writer
     
-	for {
-		if v, ok := <-*newHashChan; ok {
-            if( outFile == nil ){
-                outFile = openWriteFile(listDir)
-                writer = bufio.NewWriter(outFile)
-            }
-            line := fmt.Sprintf("%v\n", v)
-            writer.WriteString(line)
-            writer.Flush()
-        }else{
-			*scanDone <- true
-			break
-		}
-	}
+	for  v := range *newHashChan {
+        // create file if not created
+        if( outFile == nil ){
+            outFile = openWriteFile(listDir)
+            writer = bufio.NewWriter(outFile)
+        }
 
+        line := fmt.Sprintf("%v\n", v)
+        writer.WriteString(line)
+        writer.Flush()
+        
+	}
+    
 	defer outFile.Close()
+    defer close(*scanDone)
 }

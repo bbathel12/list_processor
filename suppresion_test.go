@@ -7,17 +7,10 @@ import (
 	"testing"
 )
 
-func Test_openUpload(t *testing.T) {
-	filename := "./tests/testupload.txt"
-	file := openUpload(filename)
-	if file == nil {
-		t.Error("File not found")
-	}
-}
 
 func Test_openIndex(t *testing.T) {
-	index := ind{}
-	err := index.open("./testing/")
+	index := newIndex("GoIndex")
+	err := index.open()
 	if err != nil {
 		t.Error(err)
 	}
@@ -25,7 +18,10 @@ func Test_openIndex(t *testing.T) {
 }
 
 func Test_openWriteFile(t *testing.T) {
-
+    outFile := openWriteFile("./testCase/");
+    if outFile == nil{
+        t.Error("No File Opened")
+    }
 }
 
 func Test_add(t *testing.T) {
@@ -97,6 +93,8 @@ func Test_writeIndex(t *testing.T) {
 }
 
 func Test_isMd5(t *testing.T) {
+    lineChan := make(chan string, 10)
+    hashedLineChan := make(chan string, 10)
 	
 	tests := []string{
 		"4A8A08F09D37B73795649038408B5F33",
@@ -106,10 +104,16 @@ func Test_isMd5(t *testing.T) {
         "gmail.com",
         "*.tld",
 	}
-	for _, v := range tests {
-        hashedTrimmed := forceMd5(v)
+
+    for _, v := range tests{
+        lineChan <- v
+    }
+
+    forceMd5( &lineChan, &hashedLineChan )
+
+    for hashedTrimmed := range hashedLineChan {
 		if !md5Regex.MatchString( hashedTrimmed ) {
-			t.Error(v + " is not Md5")
+			t.Error( hashedTrimmed + " is not Md5")
 		}
 	}
 }

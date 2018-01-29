@@ -12,21 +12,18 @@ import(
 */
 func checkIndex( recs, newRecs, dupes *int, index *ind, hashedLineChan, newHashChan *chan string) {
 
-	for{
-		if hashedLine, ok := <-*hashedLineChan; ok{
-            if index.contains( hashedLine ){
-                *recs++
-                *dupes++
-            }else{
-                *recs++
-                *newRecs++
-                index.add(hashedLine)
-                *newHashChan <- hashedLine
-            }
-
-        }else{ break }
+	for hashedLine := range *hashedLineChan {
+        if index.contains( hashedLine ){
+            *recs++
+            *dupes++
+        }else{
+            *recs++
+            *newRecs++
+            index.add(hashedLine)
+            *newHashChan <- hashedLine
+        }
 		
 	}
-	close( *newHashChan )
+	defer close( *newHashChan )
 	
 }
