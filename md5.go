@@ -30,6 +30,7 @@ func forceMd5( lineChan, hashedLineChan *chan string ) {
 
 	    *hashedLineChan <- hashedTrimmed
 	}
-	close( *hashedLineChan )
+	//close( *hashedLineChan )
+    defer wg.Done();
 
 }

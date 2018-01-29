@@ -8,11 +8,15 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"time"
+    "sync"
 )
+
+
+var wg sync.WaitGroup
 
 //Consts
 const usage string = "Usage: suppression [-r -h -b] -if=<inputFile> -of=<outputDirectory>"
-
+const workers int = 10
 //Regex
 var md5Regex, _ = regexp.Compile("^[a-f0-9]{32}$")
 
@@ -43,6 +47,8 @@ func init() {
 	hashedLineChan = make(chan string, buffersize)
 	newHashChan = make(chan string, buffersize)
 
+    wg.Add(workers)
+
 }
 
 func main() {
@@ -68,10 +74,15 @@ func main() {
 	index.open()
 
 	go readUpload( uploadName, &lineChan)
-	go forceMd5(&lineChan, &hashedLineChan)
+
+    for i := 0 ; i < workers; i++{
+        go forceMd5(&lineChan, &hashedLineChan)
+    }
+
 	go checkIndex(&recs, &newRecs, &dupes, index, &hashedLineChan, &newHashChan)
 	go writeNewHashes(listDir, &newHashChan, &scanDone)
-
+    wg.Wait()
+    close( hashedLineChan )
 	<-scanDone
 
 	index.write()
