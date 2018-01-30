@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-
+var hashKeySize = 4
 
 type ind struct {
 	storage map[string][]string
@@ -35,13 +35,11 @@ index method to add a key value pair to the storage
 */
 func (index *ind) add(value string) {
 	var halfhash string
-
-
-	half := len(value) / 2
-	if half <= 0 {
+	
+	if len(value) <= hashKeySize {
 		halfhash = value
 	} else {
-		halfhash = value[:half]
+		halfhash = value[:hashKeySize]
 	}
 
 	index.storage[halfhash] = append(index.storage[halfhash], value)
@@ -98,12 +96,10 @@ func (index *ind) open() (err error) {
 */
 func (index *ind) contains(line string) bool {
 	var halfhash string
-
-	half := len(line) / 2
-	if half <= 0 {
+	if len(line) <= hashKeySize {
 		halfhash = line
 	} else {
-		halfhash = line[:half]
+		halfhash = line[:hashKeySize]
 	}
 
 
