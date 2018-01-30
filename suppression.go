@@ -7,10 +7,9 @@ import (
 	"regexp"
 	"runtime"
 	"runtime/pprof"
+	"sync"
 	"time"
-    "sync"
 )
-
 
 var wg sync.WaitGroup
 
@@ -46,14 +45,22 @@ func init() {
 	lineChan = make(chan string, buffersize)
 	hashedLineChan = make(chan string, buffersize)
 	newHashChan = make(chan string, buffersize)
-    recs, newRecs, dupes = 0, 0, 0
-    wg.Add(workers)
+	recs, newRecs, dupes = 0, 0, 0
+	wg.Add(workers)
 
 }
 
 func main() {
 
 	start := time.Now()
+
+	go func() {
+		i := 0
+		for _ = range time.Tick(time.Second) {
+			i++
+			fmt.Printf("%v\r", i)
+		}
+	}()
 
 	if profile {
 		//Profiling
@@ -64,27 +71,26 @@ func main() {
 		if err := pprof.StartCPUProfile(f); err != nil {
 			log.Fatal("could not start CPU profile: ", err)
 		}
-		defer pprof.StopCPUProfile()
-		defer f.Close()
-	}
 
-	
+		defer f.Close()
+		defer pprof.StopCPUProfile()
+	}
 
 	index = newIndex(listDir + "/GoIndex")
 	index.open()
 
-	go readUpload( uploadName, &lineChan)
+	go readUpload(uploadName, &lineChan)
 
-    // spawn workers for forcing Md5 on lineChan
-    for i := 0 ; i < workers; i++{
-        go forceMd5(&lineChan, &hashedLineChan)
-    }
+	// spawn workers for forcing Md5 on lineChan
+	for i := 0; i < workers; i++ {
+		go forceMd5(&lineChan, &hashedLineChan)
+	}
 
 	go checkIndex(&recs, &newRecs, &dupes, index, &hashedLineChan, &newHashChan)
 	go writeNewHashes(listDir, &newHashChan, &scanDone)
-    
-    wg.Wait()              // wait for all forceMd5 routines to 
-    close( hashedLineChan )//close hashedLineChan which allows checkIndex to finish
+
+	wg.Wait()             // wait for all forceMd5 routines to
+	close(hashedLineChan) //close hashedLineChan which allows checkIndex to finish
 
 	<-scanDone
 
