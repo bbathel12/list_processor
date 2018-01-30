@@ -33,7 +33,7 @@ var recs, newRecs, dupes, workers int
 var listDir, uploadName string
 
 //bools make reindexing work later
-//var reindex bool
+var reindex bool
 var profile bool
 
 //index
@@ -41,7 +41,7 @@ var index *ind
 
 func init() {
 	// get command line arguments
-	uploadName, listDir, _, profile, buffersize, workers = getArgs()
+	uploadName, listDir, reindex, profile, buffersize, workers = getArgs()
 	lineChan = make(chan string, buffersize)
 	hashedLineChan = make(chan string, buffersize)
 	newHashChan = make(chan string, buffersize)
@@ -54,6 +54,7 @@ func main() {
 
 	start := time.Now()
 
+    // just a timer this can be removed later
 	go func() {
 		i := 0
 		for _ = range time.Tick(time.Second) {
@@ -61,6 +62,11 @@ func main() {
 			fmt.Printf("%v\r", i)
 		}
 	}()
+
+    if reindex {
+        reIndex( listDir )
+        os.Exit(0)
+    }
 
 	if profile {
 		//Profiling
@@ -90,7 +96,7 @@ func main() {
 	go writeNewHashes(listDir, &newHashChan, &scanDone)
 
 	wg.Wait()             // wait for all forceMd5 routines to
-	close(hashedLineChan) //close hashedLineChan which allows checkIndex to finish
+	close(hashedLineChan) // close hashedLineChan which allows checkIndex to finish
 
 	<-scanDone
 
