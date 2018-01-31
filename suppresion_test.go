@@ -7,7 +7,6 @@ import (
 	"testing"
 )
 
-
 func Test_openIndex(t *testing.T) {
 	index := newIndex("GoIndex")
 	err := index.open()
@@ -18,10 +17,10 @@ func Test_openIndex(t *testing.T) {
 }
 
 func Test_openWriteFile(t *testing.T) {
-    outFile := openWriteFile("./testCase/");
-    if outFile == nil{
-        t.Error("No File Opened")
-    }
+	outFile := openWriteFile("./testCase/")
+	if outFile == nil {
+		t.Error("No File Opened")
+	}
 }
 
 func Test_add(t *testing.T) {
@@ -34,48 +33,46 @@ func Test_add(t *testing.T) {
 		"two":   "twotwo",
 		"three": "threethree",
 	}
-    // duplicates to test duplicate rejection
-    testKeyValues2 := map[string]string{
-        "one": "oneone",
-        "two": "twotwo",
-        "three": "threethree",
-    }
-    // new to test adding new keys to existing index
-    testKeyValues3 := map[string]string{
-        "four": "fourfour",
-        "five": "fivefive",
-        "six": "sixsix",
-    }
+	// duplicates to test duplicate rejection
+	testKeyValues2 := map[string]string{
+		"one":   "oneone",
+		"two":   "twotwo",
+		"three": "threethree",
+	}
+	// new to test adding new keys to existing index
+	testKeyValues3 := map[string]string{
+		"four": "fourfour",
+		"five": "fivefive",
+		"six":  "sixsix",
+	}
 	for _, v := range testKeyValues {
 		testIndex.add(v)
 	}
 
-    for _, v := range testKeyValues2 {
-        testIndex.add(v)
-    }
+	for _, v := range testKeyValues2 {
+		testIndex.add(v)
+	}
 
-    if len(testIndex.storage) > 3 {
-        t.Error("added duplicate")
-    }
+	if len(testIndex.storage) > 3 {
+		t.Error("added duplicate")
+	}
 
-    for _, v := range testKeyValues3 {
-        testIndex.add(v)
-    }
+	for _, v := range testKeyValues3 {
+		testIndex.add(v)
+	}
 
-    
 	for k, _ := range testKeyValues {
 		if _, ok := testIndex.storage[k]; !ok {
 			errorString := fmt.Sprintf("key %s not found ", k)
 			t.Error(errorString)
 		}
 	}
-    for k, _ := range testKeyValues3 {
-        if _, ok := testIndex.storage[k]; !ok {
-            errorString := fmt.Sprintf("key %s not found ", k)
-            t.Error(errorString)
-        }
-    }
-
+	for k, _ := range testKeyValues3 {
+		if _, ok := testIndex.storage[k]; !ok {
+			errorString := fmt.Sprintf("key %s not found ", k)
+			t.Error(errorString)
+		}
+	}
 
 }
 
@@ -93,27 +90,27 @@ func Test_writeIndex(t *testing.T) {
 }
 
 func Test_isMd5(t *testing.T) {
-    lineChan := make(chan string, 10)
-    hashedLineChan := make(chan string, 10)
-	
+	lineChan := make(chan string, 10)
+	hashedLineChan := make(chan string, 10)
+
 	tests := []string{
 		"4A8A08F09D37B73795649038408B5F33",
 		"8277E0910D750195B448797616E091AD",
 		"E1671797C52E15F763380B45E841EC32",
-        "brice@gmail.com",
-        "gmail.com",
-        "*.tld",
+		"brice@gmail.com",
+		"gmail.com",
+		"*.tld",
 	}
 
-    for _, v := range tests{
-        lineChan <- v
-    }
+	for _, v := range tests {
+		lineChan <- v
+	}
 
-    forceMd5( &lineChan, &hashedLineChan )
+	forceMd5(&lineChan, &hashedLineChan)
 
-    for hashedTrimmed := range hashedLineChan {
-		if !md5Regex.MatchString( hashedTrimmed ) {
-			t.Error( hashedTrimmed + " is not Md5")
+	for hashedTrimmed := range hashedLineChan {
+		if !md5Regex.MatchString(hashedTrimmed) {
+			t.Error(hashedTrimmed + " is not Md5")
 		}
 	}
 }

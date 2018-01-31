@@ -13,28 +13,28 @@ import (
  */
 func getArgs() (uploadName, listDir string, runIndexer, profile bool, buffersize, workers int) {
 	// get command line arguments
-    flag.Usage = func(){
-        fmt.Println(usage);
-        flag.PrintDefaults();
-    }
+	flag.Usage = func() {
+		fmt.Println(usage)
+		flag.PrintDefaults()
+	}
 	reindex := flag.Bool("r", false, "re-index list directory")
 	inFile := flag.String("if", "", "specify input file with full path")
 	outDir := flag.String("of", "", "specify output list directory")
 	runProfiler := flag.Bool("p", false, "run profiler")
 	buffer := flag.Int("b", 100, "size of buffered channels")
-    workerPoolSize := flag.Int("w",2,"number of force md5 workers going")
+	workerPoolSize := flag.Int("w", 2, "number of force md5 workers going")
 	flag.Parse()
 
 	if *inFile == "" || *outDir == "" {
-		flag.Usage();
-        os.Exit(1);
+		flag.Usage()
+		os.Exit(1)
 	} else {
 		uploadName = *inFile
 		listDir = *outDir
 		runIndexer = *reindex
 		profile = *runProfiler
 		buffersize = *buffer
-        workers = *workerPoolSize
+		workers = *workerPoolSize
 	}
 	return
 }
@@ -60,22 +60,22 @@ func openWriteFile(listDir string) (outFile *os.File) {
 * @param newHashes []string: an array containing all hashes to write
  */
 func writeNewHashes(listDir string, newHashChan *chan string, scanDone *chan bool) {
-    var outFile *os.File
-    var writer *bufio.Writer
-    
-	for  v := range *newHashChan {
-        // create file if not created
-        if( outFile == nil ){
-            outFile = openWriteFile(listDir)
-            writer = bufio.NewWriter(outFile)
-        }
+	var outFile *os.File
+	var writer *bufio.Writer
 
-        line := fmt.Sprintf("%v\n", v)
-        writer.WriteString(line)
-        writer.Flush()
-        
+	for v := range *newHashChan {
+		// create file if not created
+		if outFile == nil {
+			outFile = openWriteFile(listDir)
+			writer = bufio.NewWriter(outFile)
+		}
+
+		line := fmt.Sprintf("%v\n", v)
+		writer.WriteString(line)
+		writer.Flush()
+
 	}
-    
+
 	defer outFile.Close()
-    defer close(*scanDone)
+	defer close(*scanDone)
 }
