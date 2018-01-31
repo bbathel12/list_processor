@@ -24,5 +24,5 @@ func reIndex( listDir string ){
         }
     }
     // write after everything indexed
-    index.write()
+    index.writeIndexFile()
 }

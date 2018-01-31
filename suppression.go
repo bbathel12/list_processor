@@ -31,6 +31,7 @@ var recs, newRecs, dupes, workers int
 
 //strings
 var listDir, uploadName string
+var indexName string = "/GoIndex"
 
 //bools make reindexing work later
 var reindex bool
@@ -55,13 +56,13 @@ func main() {
 	start := time.Now()
 
     // just a timer this can be removed later
-	go func() {
-		i := 0
-		for _ = range time.Tick(time.Second) {
-			i++
-			fmt.Printf("%v\r", i)
-		}
-	}()
+	// go func() {
+	// 	i := 0
+	// 	for _ = range time.Tick(time.Second) {
+	// 		i++
+	// 		fmt.Printf("%v\r", i)
+	// 	}
+	// }()
 
     if reindex {
         reIndex( listDir )
@@ -82,7 +83,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	index = newIndex(listDir + "/GoIndex")
+	index = newIndex( listDir + indexName )
 	index.open()
 
 	go readUpload(uploadName, &lineChan)
@@ -100,7 +101,10 @@ func main() {
 
 	<-scanDone
 
-	index.write()
+	index.writeIndexFile()
+
+    // create zip file for download named list.zip
+    zipper( index.read(), listDir );
 
 	end := time.Now()
 	total := end.Sub(start)

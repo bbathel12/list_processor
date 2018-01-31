@@ -49,7 +49,7 @@ func (index *ind) add(value string) {
 * writes encoded gob to file named index in the list directory
 * @return nil
 */
-func (index *ind) write() {
+func (index *ind) writeIndexFile() {
 	if _, err := os.Stat(index.name); os.IsNotExist(err) {
 		indexFile, err := os.Create(index.name)
 		if err != nil {
@@ -113,3 +113,22 @@ func (index *ind) contains(line string) bool {
     
 	return false
 }
+
+
+/*
+* function so index type implements the io.Writer interface
+*/
+func (index *ind) read() ( hashes chan string ){
+    hashes = make( chan string , 1000)
+    go func(){
+        defer close(hashes)
+        for _, arr := range index.storage{
+            for _, hashSlice := range arr{
+                hashes <- hashSlice            
+            } 
+        }
+    }()
+    return
+} 
+
+
