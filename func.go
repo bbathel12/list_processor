@@ -21,7 +21,7 @@ func getArgs() (uploadName, listDir string, runIndexer, profile bool, buffersize
 	inFile := flag.String("if", "", "specify input file with full path")
 	outDir := flag.String("of", "", "specify output list directory")
 	runProfiler := flag.Bool("p", false, "run profiler")
-	buffer := flag.Int("b", 100, "size of buffered channels")
+	buffer := flag.Int("b", 1000, "size of buffered channels")
 	workerPoolSize := flag.Int("w", 2, "number of force md5 workers going")
 	flag.Parse()
 
