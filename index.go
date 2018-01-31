@@ -15,13 +15,12 @@ type ind struct {
 	name    string
 }
 
-
 /*
 * constructor for index type
 * @param name string
 * return index ind
-*/
-func newIndex(name string) (index *ind){
+ */
+func newIndex(name string) (index *ind) {
 	index = new(ind)
 	index.name = name
 	index.storage = map[string][]string{}
@@ -35,7 +34,7 @@ index method to add a key value pair to the storage
 */
 func (index *ind) add(value string) {
 	var halfhash string
-	
+
 	if len(value) <= hashKeySize {
 		halfhash = value
 	} else {
@@ -48,7 +47,7 @@ func (index *ind) add(value string) {
 /*
 * writes encoded gob to file named index in the list directory
 * @return nil
-*/
+ */
 func (index *ind) write() {
 	if _, err := os.Stat(index.name); os.IsNotExist(err) {
 		indexFile, err := os.Create(index.name)
@@ -73,7 +72,7 @@ func (index *ind) write() {
 * @param listDir string: the directory of the list being updated
 * @return index ind
 * @return err error
-*/
+ */
 func (index *ind) open() (err error) {
 	filename := index.name
 	if _, err := os.Stat(filename); !os.IsNotExist(err) {
@@ -93,7 +92,7 @@ func (index *ind) open() (err error) {
 
 /*
 * checks if hash is already in storage returns bool
-*/
+ */
 func (index *ind) contains(line string) bool {
 	var halfhash string
 	if len(line) <= hashKeySize {
@@ -102,7 +101,6 @@ func (index *ind) contains(line string) bool {
 		halfhash = line[:hashKeySize]
 	}
 
-
 	if _, ok := index.storage[halfhash]; ok {
 		for _, v := range index.storage[halfhash] {
 			if line == v {
@@ -110,6 +108,6 @@ func (index *ind) contains(line string) bool {
 			}
 		}
 	}
-    
+
 	return false
 }
