@@ -1,7 +1,9 @@
 package main
 
 import (
-	"io/ioutil"
+	"bufio"
+    "io/ioutil"
+    "os"
 	"strings"
 )
 
@@ -19,4 +21,21 @@ func readUpload(uploadName string, lineChan *chan string) {
 		*lineChan <- line
 	}
 	close(*lineChan)
+}
+
+
+func readUploadByLine(uploadName string, lineChan *chan string){
+    upload, err := os.Open(uploadName)
+    defer upload.Close()
+    if err != nil {
+        panic(err)
+    }
+
+    reader := bufio.NewScanner(upload)
+    
+    for reader.Scan() {
+        *lineChan <- reader.Text()
+    }
+
+    defer close(*lineChan)
 }

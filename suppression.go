@@ -86,7 +86,7 @@ func main() {
 	index = newIndex( listDir + indexName )
 	index.open()
 
-	go readUpload(uploadName, &lineChan)
+	go readUploadByLine(uploadName, &lineChan)
 
 	// spawn workers for forcing Md5 on lineChan
 	for i := 0; i < workers; i++ {
