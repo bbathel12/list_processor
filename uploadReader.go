@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+    "fmt"
+    "io"
     "io/ioutil"
     "os"
 	"strings"
@@ -31,11 +33,22 @@ func readUploadByLine(uploadName string, lineChan *chan string){
         panic(err)
     }
 
-    reader := bufio.NewScanner(upload)
-    
-    for reader.Scan() {
-        *lineChan <- reader.Text()
+    reader := bufio.NewReader(upload)
+
+    for {
+        line, err := reader.ReadString('\n')
+        if err != nil {
+                if err == io.EOF {
+                    break
+                } else {
+                    fmt.Println(err)
+                    os.Exit(1)
+                }
+            }
+        *lineChan <- line
     }
+
+
 
     defer close(*lineChan)
 }
