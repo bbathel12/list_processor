@@ -55,19 +55,19 @@ func main() {
 
 	start := time.Now()
 
-    // just a timer this can be removed later
-	// go func() {
-	// 	i := 0
-	// 	for _ = range time.Tick(time.Second) {
-	// 		i++
-	// 		fmt.Printf("%v\r", i)
-	// 	}
-	// }()
+	// just a timer this can be removed later
+	go func() {
+		i := 0
+		for _ = range time.Tick(time.Second) {
+			i++
+			fmt.Printf("%v\r", i)
+		}
+	}()
 
-    if reindex {
-        reIndex( listDir )
-        os.Exit(0)
-    }
+	if reindex {
+		reIndex(listDir)
+		os.Exit(0)
+	}
 
 	if profile {
 		//Profiling
@@ -83,9 +83,9 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	index = newIndex( listDir + indexName )
+	index = newIndex(listDir + indexName)
 	index.open()
- 
+
 	go readUploadByLine(uploadName, &lineChan)
 
 	// spawn workers for forcing Md5 on lineChan
@@ -103,8 +103,8 @@ func main() {
 
 	index.writeIndexFile()
 
-    // create zip file for download named list.zip
-    zipper( index.read(), listDir );
+	// create zip file for download named list.zip
+	zipper(index.read(), listDir)
 
 	end := time.Now()
 	total := end.Sub(start)
