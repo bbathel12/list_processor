@@ -21,12 +21,14 @@ func forceMd5(lineChan, hashedLineChan *chan string) {
 		} // if line chan closed break out;
 
 		hashedTrimmed := strings.TrimSpace(line)
-		hashedTrimmed = strings.ToLower(line)
+		hashedTrimmed = strings.ToLower(hashedTrimmed)
 
 		if !md5Regex.MatchString(hashedTrimmed) {
+
 			bytes := []byte(hashedTrimmed)
 			hashedBytes := md5.Sum(bytes)
 			hashedTrimmed = fmt.Sprintf("%x", hashedBytes)
+			fmt.Println("fuck")
 		}
 
 		*hashedLineChan <- hashedTrimmed
