@@ -4,14 +4,16 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
+	btgo "github.com/4d55397500/btgo"
 	"io/ioutil"
 	"os"
+	"strconv"
 )
 
 var hashKeySize = 4
 
 type ind struct {
-	storage map[string][]string
+	storage btgo.Node
 	name    string
 }
 
@@ -23,7 +25,7 @@ type ind struct {
 func newIndex(name string) (index *ind) {
 	index = new(ind)
 	index.name = name
-	index.storage = map[string][]string{}
+	index.storage = btgo.Node{}
 	return
 }
 
@@ -33,21 +35,15 @@ index method to add a key value pair to the storage
 @param value string
 */
 func (index *ind) add(value string) {
-	var halfhash string
-
-	if len(value) <= hashKeySize {
-		halfhash = value
-	} else {
-		halfhash = value[:hashKeySize]
-	}
-
-	index.storage[halfhash] = append(index.storage[halfhash], value)
+	ivalue64, _ := strconv.ParseInt(value, 16, 64)
+	ivalue := int(ivalue64)
+	index.storage.Insert(ivalue)
 }
 
 /*
 * writes encoded gob to file named index in the list directory
 * @return nil
-*/
+ */
 func (index *ind) writeIndexFile() {
 	if _, err := os.Stat(index.name); os.IsNotExist(err) {
 		indexFile, err := os.Create(index.name)
@@ -84,7 +80,7 @@ func (index *ind) open() (err error) {
 		}
 		defer indexFile.Close()
 	} else {
-		index.storage = map[string][]string{}
+		index.storage = btgo.Node{}
 	}
 
 	return err
@@ -93,40 +89,25 @@ func (index *ind) open() (err error) {
 /*
 * checks if hash is already in storage returns bool
  */
-func (index *ind) contains(line string) bool {
-	var halfhash string
-	if len(line) <= hashKeySize {
-		halfhash = line
-	} else {
-		halfhash = line[:hashKeySize]
-	}
-
-	if _, ok := index.storage[halfhash]; ok {
-		for _, v := range index.storage[halfhash] {
-			if line == v {
-				return true
-			}
-		}
-	}
-
-	return false
+func (index *ind) contains(value string) bool {
+	ivalue64, _ := strconv.ParseInt(value, 16, 64)
+	ivalue := int(ivalue64)
+	fmt.Println(ivalue)
+	return index.storage.Lookup(ivalue)
 }
-
 
 /*
 * function so index type implements the io.Writer interface
-*/
-func (index *ind) read() ( hashes chan string ){
-    hashes = make( chan string , 1000)
-    go func(){
-        defer close(hashes)
-        for _, arr := range index.storage{
-            for _, hashSlice := range arr{
-                hashes <- hashSlice            
-            } 
-        }
-    }()
-    return
-} 
-
-
+ */
+// func (index *ind) read() (hashes chan string) {
+// 	hashes = make(chan string, 1000)
+// 	go func() {
+// 		defer close(hashes)
+// 		for _, arr := range index.storage {
+// 			for _, hashSlice := range arr {
+// 				hashes <- hashSlice
+// 			}
+// 		}
+// 	}()
+// 	return
+// }

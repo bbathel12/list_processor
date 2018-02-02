@@ -104,7 +104,7 @@ func main() {
 	index.writeIndexFile()
 
 	// create zip file for download named list.zip
-	zipper(index.read(), listDir)
+	//zipper(index.read(), listDir)
 
 	end := time.Now()
 	total := end.Sub(start)
