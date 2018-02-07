@@ -1,128 +1,99 @@
 package main
 
 import (
-	"reflect"
+	"fmt"
 	"testing"
 )
 
-func Test_newIndex(t *testing.T) {
-	type args struct {
-		name string
+func Test_openIndex(t *testing.T) {
+	index := newIndex("GoIndex")
+	err := index.open()
+	if err != nil {
+		t.Error(err)
 	}
-	tests := []struct {
-		name      string
-		args      args
-		wantIndex *ind
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if gotIndex := newIndex(tt.args.name); !reflect.DeepEqual(gotIndex, tt.wantIndex) {
-				t.Errorf("newIndex() = %v, want %v", gotIndex, tt.wantIndex)
-			}
-		})
+	//fmt.Println(index.storage)
+}
+
+func Test_openWriteFile(t *testing.T) {
+	outFile := openWriteFile("./testCase/")
+	if outFile == nil {
+		t.Error("No File Opened")
 	}
 }
 
-func Test_ind_add(t *testing.T) {
-	type fields struct {
-		storage map[string][]string
-		name    string
+func Test_add(t *testing.T) {
+	testIndex := newIndex("GoIndex")
+	testKeyValues := map[string]string{
+		"oneo": "oneone",
+		"twot": "twotwo",
+		"thre": "threethree",
 	}
-	type args struct {
-		value string
+
+	// new to test adding new keys to existing index
+	testKeyValues3 := map[string]string{
+		"four": "fourfour",
+		"five": "fivefive",
+		"sixs": "sixsix",
 	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-	}{
-	// TODO: Add test cases.
+	for _, v := range testKeyValues {
+		testIndex.add(v)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			index := &ind{
-				storage: tt.fields.storage,
-				name:    tt.fields.name,
-			}
-			index.add(tt.args.value)
-		})
+
+	for _, v := range testKeyValues {
+		testIndex.add(v)
 	}
+
+	if len(testIndex.storage) > 3 {
+		t.Error("added duplicate")
+	}
+
+	for _, v := range testKeyValues3 {
+		testIndex.add(v)
+	}
+
+	for k, _ := range testKeyValues {
+		if _, ok := testIndex.storage[k]; !ok {
+			errorString := fmt.Sprintf("key %s not found ", k)
+			t.Error(errorString)
+		}
+	}
+	for k, _ := range testKeyValues3 {
+		if _, ok := testIndex.storage[k]; !ok {
+			errorString := fmt.Sprintf("key %s not found ", k)
+			t.Error(errorString)
+		}
+	}
+
 }
 
-func Test_ind_write(t *testing.T) {
-	type fields struct {
-		storage map[string][]string
-		name    string
+func Test_writeIndex(t *testing.T) {
+	index := ind{
+		name: "./tests/index",
+		storage: map[string][]string{
+			"one":   []string{"1", "2", "3"},
+			"two":   []string{"1", "2", "3"},
+			"three": []string{"1", "2", "3"},
+		},
 	}
-	tests := []struct {
-		name   string
-		fields fields
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			index := &ind{
-				storage: tt.fields.storage,
-				name:    tt.fields.name,
-			}
-			index.write()
-		})
-	}
+	index.writeIndexFile()
+
 }
 
-func Test_ind_open(t *testing.T) {
-	type fields struct {
-		storage map[string][]string
-		name    string
+func Test_contains(t *testing.T) {
+	index := ind{
+		name: "testindex",
+		storage: map[string][]string{
+			"onet":  []string{"onetwo", "onetlu", "onetru"},
+			"two":   []string{"1", "2", "3"},
+			"three": []string{"1", "2", "3"},
+		},
 	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-	}{
-	// TODO: Add test cases.
+	v := "onetwo"
+	if !index.contains(v) {
+		t.Error("INDEX DOESN'T CONTAIN " + v)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			index := &ind{
-				storage: tt.fields.storage,
-				name:    tt.fields.name,
-			}
-			if err := index.open(); (err != nil) != tt.wantErr {
-				t.Errorf("ind.open() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func Test_ind_contains(t *testing.T) {
-	type fields struct {
-		storage map[string][]string
-		name    string
-	}
-	type args struct {
-		line string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   bool
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			index := &ind{
-				storage: tt.fields.storage,
-				name:    tt.fields.name,
-			}
-			if got := index.contains(tt.args.line); got != tt.want {
-				t.Errorf("ind.contains() = %v, want %v", got, tt.want)
-			}
-		})
+	v = "orangeorange"
+	if index.contains(v) {
+		t.Error("INDEX SHOULDN'T CONTAIN " + v)
 	}
 }

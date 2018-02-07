@@ -32,21 +32,6 @@ func readUploadByLine(uploadName string, lineChan *chan string) {
 		panic(err)
 	}
 
-	// reader := bufio.NewReader(upload)
-
-	// for {
-	//     line, err := reader.ReadString('\n')
-	//     if err != nil {
-	//             if err == io.EOF {
-	//                 break
-	//             } else {
-	//                 fmt.Println(err)
-	//                 os.Exit(1)
-	//             }
-	//         }
-	//     *lineChan <- line
-	// }
-
 	scanner := bufio.NewScanner(upload)
 	scanner.Buffer([]byte{}, 50)
 
