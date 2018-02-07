@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"runtime"
 	"runtime/pprof"
 	"sync"
@@ -15,9 +14,6 @@ var wg sync.WaitGroup
 
 //Consts
 const usage string = "Usage: suppression [-r -h -b -w] -if=<inputFile> -of=<outputDirectory>"
-
-//Regex
-var md5Regex, _ = regexp.Compile("^[a-f0-9]{32}$")
 
 //Channels bufffered seems faster
 var buffersize int
@@ -41,17 +37,18 @@ var profile bool
 var index *ind
 
 func init() {
-	// get command line arguments
+	//do stuff before main
+
+}
+
+func main() {
+
 	uploadName, listDir, reindex, profile, buffersize, workers = getArgs()
 	lineChan = make(chan string, buffersize)
 	hashedLineChan = make(chan string, buffersize)
 	newHashChan = make(chan string, buffersize)
 	recs, newRecs, dupes = 0, 0, 0
 	wg.Add(workers)
-
-}
-
-func main() {
 
 	start := time.Now()
 
@@ -90,7 +87,7 @@ func main() {
 
 	// spawn workers for forcing Md5 on lineChan
 	for i := 0; i < workers; i++ {
-		go forceMd5(&lineChan, &hashedLineChan)
+		go loopForceMd5(&lineChan, &hashedLineChan)
 	}
 
 	go checkIndex(&recs, &newRecs, &dupes, index, &hashedLineChan, &newHashChan)
