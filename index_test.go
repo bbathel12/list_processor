@@ -97,3 +97,29 @@ func Test_contains(t *testing.T) {
 		t.Error("INDEX SHOULDN'T CONTAIN " + v)
 	}
 }
+
+func Benchmark_index_add(b *testing.B) {
+	index := newIndex("GoIndex")
+	for i := 0; i < b.N; i++ {
+		index.add(string(i))
+	}
+}
+
+func Benchmark_index_contains(b *testing.B) {
+	index := newIndex("GoIndex")
+	for i := 0; i < 10000; i++ {
+		index.add(string(i))
+	}
+
+	b.ResetTimer()
+	for j := 0; j < b.N; j++ {
+		index.contains(string(j))
+	}
+}
+
+func Benchmark_open_index(b *testing.B) {
+	index := newIndex("testCase/GoIndex")
+	for i := 0; i < b.N; i++ {
+		index.open()
+	}
+}
