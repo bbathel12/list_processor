@@ -60,15 +60,6 @@ func main() {
 
 	start := time.Now()
 
-	// just a timer this can be removed later
-	go func() {
-		i := 0
-		for _ = range time.Tick(time.Second) {
-			i++
-			fmt.Printf("%v\r", i)
-		}
-	}()
-
 	if reindex {
 		reIndex(listDir)
 		os.Exit(0)
