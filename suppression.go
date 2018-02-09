@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -35,6 +36,13 @@ var profile bool
 
 //index
 var index *ind
+
+type output struct {
+	Totaltime     string `json:"total_time"`
+	New_records   int    `json:"new_records"`
+	Duplicates    int    `json:"dupes"`
+	Total_records int    `json:"records"`
+}
 
 func init() {
 	//do stuff before main
@@ -105,9 +113,15 @@ func main() {
 
 	end := time.Now()
 	total := end.Sub(start)
-	fmt.Printf("Time Total: ")
-	fmt.Println(total)
-	fmt.Printf("Recs: %d New Recs: %d Dupes: %d ", recs, newRecs, dupes)
+
+	var stats *output = &output{
+		Totaltime:     fmt.Sprintf("%v", total),
+		New_records:   newRecs,
+		Duplicates:    dupes,
+		Total_records: recs,
+	}
+	stats_bytes, _ := json.Marshal(stats)
+	fmt.Println(string(stats_bytes))
 
 	if profile {
 		//memory profiling
