@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func reIndex(listDir string) {
+func reIndex(uploadDirectory string) {
 	index = newIndex(listDir + "/GoIndex")
 	var lineChan chan string = make(chan string, buffersize)
 	var newHashChan chan string = make(chan string, buffersize)
@@ -13,7 +13,7 @@ func reIndex(listDir string) {
 	files, _ := ioutil.ReadDir(listDir)
 	for _, file := range files {
 		if strings.Contains(file.Name(), ".md5") {
-			go readUpload(listDir+file.Name(), &lineChan)
+			go readUploadDirectory(uploadDirectory, &lineChan)
 			go checkIndex(&recs, &newRecs, &dupes, index, &lineChan, &newHashChan)
 			for _ = range newHashChan {
 				// black hole for new hashes

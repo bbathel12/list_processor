@@ -1,12 +1,16 @@
 package main
 
 import (
+	"sync"
 	"testing"
 )
 
 func test_readUpload(t *testing.T) {
 	lineChan := make(chan string)
-	readUpload("tests/list2.md5", &lineChan)
+	var readerGroup sync.WaitGroup
+	readerGroup.Add(1)
+
+	readUpload("tests/list2.md5", &lineChan, &readerGroup)
 	testLines := [5]string{
 		"0CC175B9C0F1B6A831C399E269772661",
 		"92EB5FFEE6AE2FEC3AD71C777531578F",
@@ -29,7 +33,10 @@ func test_readUpload(t *testing.T) {
 
 func test_readUploadByLine(t *testing.T) {
 	lineChan := make(chan string)
-	readUpload("tests/list2.md5", &lineChan)
+	var readerGroup sync.WaitGroup
+	readerGroup.Add(1)
+
+	readUpload("tests/list2.md5", &lineChan, &readerGroup)
 	testLines := [5]string{
 		"0CC175B9C0F1B6A831C399E269772661",
 		"92EB5FFEE6AE2FEC3AD71C777531578F",
@@ -51,6 +58,8 @@ func test_readUploadByLine(t *testing.T) {
 }
 
 func Benchmark_readUpload(b *testing.B) {
+	var readerGroup sync.WaitGroup
+	readerGroup.Add(1)
 
 	for i := 0; i < b.N; i++ {
 		lineChan := make(chan string, 10)
@@ -61,12 +70,15 @@ func Benchmark_readUpload(b *testing.B) {
 			}
 			done <- true
 		}(&lineChan)
-		readUpload("tests/supplist.txt", &lineChan)
+
+		readUpload("tests/supplist.txt", &lineChan, &readerGroup)
 		<-done
 	}
 }
 
 func Benchmark_readUploadByLine(b *testing.B) {
+	var readerGroup sync.WaitGroup
+	readerGroup.Add(1)
 
 	for i := 0; i < b.N; i++ {
 		lineChan := make(chan string, 100)
@@ -77,7 +89,7 @@ func Benchmark_readUploadByLine(b *testing.B) {
 			}
 			done <- true
 		}(&lineChan)
-		readUploadByLine("tests/supplist.txt", &lineChan)
+		readUploadByLine("tests/supplist.txt", &lineChan, &readerGroup)
 		<-done
 	}
 }

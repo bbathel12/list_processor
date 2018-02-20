@@ -5,12 +5,12 @@ import (
 	_ "testing"
 )
 
-func Test_openWriteFile(t *testing.T) {
-	file := openWriteFile("./testCase")
-	fileType = fmt.PrintF
+// func Test_openWriteFile(t *testing.T) {
+// 	file := openWriteFile("./testCase")
+// 	fileType = fmt.PrintF
 
-}
+// }
 
-func Test_writeNewHashes(t *testing.T) {
+// func Test_writeNewHashes(t *testing.T) {
 
-}
+// }

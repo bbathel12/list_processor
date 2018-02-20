@@ -19,12 +19,7 @@ var md5Regex, _ = regexp.Compile("^[a-f0-9]{32}$")
  */
 func loopForceMd5(lineChan, hashedLineChan *chan string) {
 
-	for {
-
-		line, ok := <-*lineChan
-		if !ok {
-			break
-		} // if line chan closed break out;
+	for line := range *lineChan {
 
 		hashedTrimmed := forceMd5(line)
 

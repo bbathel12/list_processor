@@ -27,7 +27,7 @@ var scanDone chan bool = make(chan bool) // not buffered to keep main routine fr
 var recs, newRecs, dupes, workers int
 
 //strings
-var listDir, uploadName string
+var listDir, uploadDirectory string
 var indexName string = "/GoIndex"
 
 //bools make reindexing work later
@@ -51,7 +51,7 @@ func init() {
 
 func main() {
 
-	uploadName, listDir, reindex, profile, buffersize, workers = getArgs()
+	uploadDirectory, listDir, reindex, profile, buffersize, workers = getArgs()
 	lineChan = make(chan string, buffersize)
 	hashedLineChan = make(chan string, buffersize)
 	newHashChan = make(chan string, buffersize)
@@ -61,7 +61,7 @@ func main() {
 	start := time.Now()
 
 	if reindex {
-		reIndex(listDir)
+		reIndex(uploadDirectory)
 		os.Exit(0)
 	}
 
@@ -82,7 +82,7 @@ func main() {
 	index = newIndex(listDir + indexName)
 	index.open()
 
-	go readUploadByLine(uploadName, &lineChan)
+	go readUploadDirectory(uploadDirectory, &lineChan)
 
 	// spawn workers for forcing Md5 on lineChan
 	for i := 0; i < workers; i++ {

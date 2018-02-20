@@ -2,14 +2,15 @@ package main
 
 import (
 	"bufio"
-	_ "fmt"
+	"fmt"
 	_ "io"
 	"io/ioutil"
 	"os"
 	"strings"
+	"sync"
 )
 
-func readUpload(uploadName string, lineChan *chan string) {
+func readUpload(uploadName string, lineChan *chan string, readerGroup *sync.WaitGroup) {
 	uploadBytes, err := ioutil.ReadFile(uploadName)
 	uploadString := string(uploadBytes)
 	if err != nil {
@@ -22,10 +23,12 @@ func readUpload(uploadName string, lineChan *chan string) {
 		}
 		*lineChan <- line
 	}
-	close(*lineChan)
+
+	defer readerGroup.Done()
+
 }
 
-func readUploadByLine(uploadName string, lineChan *chan string) {
+func readUploadByLine(uploadName string, lineChan *chan string, readerGroup *sync.WaitGroup) {
 	upload, err := os.Open(uploadName)
 	defer upload.Close()
 	if err != nil {
@@ -38,6 +41,28 @@ func readUploadByLine(uploadName string, lineChan *chan string) {
 	for scanner.Scan() {
 		*lineChan <- scanner.Text()
 	}
+
+	defer readerGroup.Done()
+
+}
+
+func readUploadDirectory(uploadDirectory string, lineChan *chan string) {
+	var readerGroup sync.WaitGroup
+
+	files, err := ioutil.ReadDir(uploadDirectory)
+
+	if err != nil {
+		fmt.Println("Input Directory", uploadDirectory, "Not found")
+		os.Exit(1)
+	}
+
+	for _, file := range files {
+		readerGroup.Add(1)
+		go readUploadByLine(uploadDirectory+"/"+file.Name(), lineChan, &readerGroup)
+
+	}
+
+	readerGroup.Wait()
 
 	defer close(*lineChan)
 }

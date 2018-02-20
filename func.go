@@ -18,7 +18,7 @@ func getArgs() (uploadName, listDir string, runIndexer, profile bool, buffersize
 		flag.PrintDefaults()
 	}
 	reindex := flag.Bool("r", false, "re-index list directory")
-	inFile := flag.String("if", "", "specify input file with full path")
+	inFile := flag.String("if", "", "specify input directory with full path")
 	outDir := flag.String("of", "", "specify output list directory")
 	runProfiler := flag.Bool("p", false, "run profiler")
 	buffer := flag.Int("b", 1000, "size of buffered channels")
