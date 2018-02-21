@@ -15,7 +15,7 @@ func Test_openIndex(t *testing.T) {
 }
 
 func Test_openWriteFile(t *testing.T) {
-	outFile := openWriteFile("./testCase/")
+	outFile := openWriteFile("./testCase/", ".txt")
 	if outFile == nil {
 		t.Error("No File Opened")
 	}

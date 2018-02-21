@@ -4,7 +4,45 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
+	_ "strings"
 )
+
+var scrubDomains map[string]bool
+var blank_byte = []byte{}
+var scrubReplRegex, _ = regexp.Compile("^[*]?@")
+
+func init() {
+	scrubDomains = readScrubDomains()
+}
+
+func readScrubDomains() (scrubDomains map[string]bool) {
+	config, err := os.Open("./domainsconfig.txt")
+	scrubDomains = map[string]bool{}
+	if err == nil {
+
+		scanner := bufio.NewScanner(config)
+		for scanner.Scan() {
+			if _, ok := scrubDomains[scanner.Text()]; !ok {
+				scrubDomains[scanner.Text()] = true
+			}
+		}
+
+	}
+	return
+
+}
+
+func inScrubDomains(value string) bool {
+	var piece []byte
+	piece = scrubReplRegex.ReplaceAll([]byte(value), blank_byte)
+
+	if _, ok := scrubDomains[string(piece)]; !ok {
+		return false
+	}
+
+	return true
+}
 
 func domainLoop(domainChan, newDomainChan *chan string, index *ind) {
 
@@ -12,9 +50,12 @@ func domainLoop(domainChan, newDomainChan *chan string, index *ind) {
 	var added bool
 
 	for domain = range *domainChan {
-		if added = index.checkAndAddDomain(domain, &newRecs); added {
-			*newDomainChan <- domain
+		if !inScrubDomains(domain) {
+			if added = index.checkAndAddDomain(domain, &newRecs); added {
+				*newDomainChan <- domain
+			}
 		}
+
 	}
 
 	defer close(*newDomainChan)

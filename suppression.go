@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	_ "fmt"
 	"log"
 	"os"
 	"runtime"
@@ -86,7 +86,6 @@ func main() {
 
 	<-scanDone
 	<-domainScanDone
-	fmt.Println(index.Domains)
 	index.writeIndexFile()
 
 	// create zip file for download named list.zip
