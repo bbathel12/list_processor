@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -18,10 +17,10 @@ const usage string = "Usage: suppression [-r -h -b -w] -if=<inputFile> -of=<outp
 
 //Channels bufffered seems faster
 var buffersize int
-var lineChan chan string
+var lineChan, emailChan, domainChan chan string
 var hashedLineChan chan string
-var newHashChan chan string
-var scanDone chan bool = make(chan bool) // not buffered to keep main routine from finishing
+var newHashChan, newDomainChan chan string
+var scanDone, domainScanDone chan bool = make(chan bool), make(chan bool) // not buffered to keep main routine from finishing
 
 //ints
 var recs, newRecs, dupes, workers int
@@ -37,13 +36,6 @@ var profile bool
 //index
 var index *ind
 
-type output struct {
-	Totaltime     string `json:"total_time"`
-	New_records   int    `json:"new_records"`
-	Duplicates    int    `json:"dupes"`
-	Total_records int    `json:"records"`
-}
-
 func init() {
 	//do stuff before main
 
@@ -55,6 +47,9 @@ func main() {
 	lineChan = make(chan string, buffersize)
 	hashedLineChan = make(chan string, buffersize)
 	newHashChan = make(chan string, buffersize)
+	newDomainChan = make(chan string, buffersize)
+	domainChan = make(chan string, buffersize)
+	emailChan = make(chan string, buffersize)
 	recs, newRecs, dupes = 0, 0, 0
 	wg.Add(workers)
 
@@ -82,37 +77,27 @@ func main() {
 	index = newIndex(listDir + indexName)
 	index.open()
 
-	go readUploadDirectory(uploadDirectory, &lineChan)
-
-	// spawn workers for forcing Md5 on lineChan
-	for i := 0; i < workers; i++ {
-		go loopForceMd5(&lineChan, &hashedLineChan)
-	}
-
-	go checkIndex(&recs, &newRecs, &dupes, index, &hashedLineChan, &newHashChan)
+	go readUploadDirectory(uploadDirectory, &domainChan, &lineChan)
+	go domainEmailMultiPlex(&recs, &lineChan, &domainChan, &hashedLineChan)
+	go domainLoop(&domainChan, &newDomainChan, index)
+	go checkIndex(&newRecs, &dupes, index, &hashedLineChan, &newHashChan)
 	go writeNewHashes(listDir, &newHashChan, &scanDone)
-
-	wg.Wait()             // wait for all forceMd5 routines to
-	close(hashedLineChan) // close hashedLineChan which allows checkIndex to finish
+	go writeNewDomains(listDir, &newDomainChan, &domainScanDone)
 
 	<-scanDone
-
+	<-domainScanDone
+	fmt.Println(index.Domains)
 	index.writeIndexFile()
 
 	// create zip file for download named list.zip
-	zipper(index.read(), listDir)
+	zipper(index.read(), index.readDomains(), listDir)
 
 	end := time.Now()
 	total := end.Sub(start)
 
-	var stats *output = &output{
-		Totaltime:     fmt.Sprintf("%v", total),
-		New_records:   newRecs,
-		Duplicates:    dupes,
-		Total_records: recs,
-	}
-	stats_bytes, _ := json.Marshal(stats)
-	fmt.Println(string(stats_bytes))
+	// create new output struct and print json
+	output := newOutput(total, newRecs, dupes, recs)
+	output.printJson()
 
 	if profile {
 		//memory profiling

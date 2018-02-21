@@ -44,9 +44,9 @@ func getArgs() (uploadName, listDir string, runIndexer, profile bool, buffersize
 * @param listDir string: the directory of the list being updated
 * @return outFile *os.File
  */
-func openWriteFile(listDir string) (outFile *os.File) {
+func openWriteFile(listDir, extension string) (outFile *os.File) {
 	t := time.Now()
-	filename := fmt.Sprintf("%s/%d.md5", listDir, t.Unix())
+	filename := fmt.Sprintf("%s/%d%s", listDir, t.Unix(), extension)
 	outFile, err := os.Create(filename)
 	if err != nil {
 		panic(err)
@@ -66,7 +66,7 @@ func writeNewHashes(listDir string, newHashChan *chan string, scanDone *chan boo
 	for v := range *newHashChan {
 		// create file if not created
 		if outFile == nil {
-			outFile = openWriteFile(listDir)
+			outFile = openWriteFile(listDir, ".md5")
 			writer = bufio.NewWriter(outFile)
 		}
 

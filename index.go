@@ -11,8 +11,9 @@ import (
 var hashKeySize = 4
 
 type ind struct {
-	storage map[string][]string
+	Storage map[string][]string
 	name    string
+	Domains map[string]bool
 }
 
 /*
@@ -23,12 +24,13 @@ type ind struct {
 func newIndex(name string) (index *ind) {
 	index = new(ind)
 	index.name = name
-	index.storage = map[string][]string{}
+	index.Storage = map[string][]string{}
+	index.Domains = map[string]bool{}
 	return
 }
 
 /*
-index method to add a key value pair to the storage
+index method to add a key value pair to the Storage
 @param key string
 @param value string
 */
@@ -41,7 +43,7 @@ func (index *ind) add(value string) {
 		halfhash = value[:hashKeySize]
 	}
 
-	index.storage[halfhash] = append(index.storage[halfhash], value)
+	index.Storage[halfhash] = append(index.Storage[halfhash], value)
 }
 
 /*
@@ -60,7 +62,7 @@ func (index *ind) writeIndexFile() {
 	b := new(bytes.Buffer)
 	e := gob.NewEncoder(b)
 
-	err := e.Encode(index.storage)
+	err := e.Encode(index)
 	if err != nil {
 		panic(err)
 	}
@@ -78,20 +80,21 @@ func (index *ind) open() (err error) {
 	if _, err := os.Stat(filename); !os.IsNotExist(err) {
 		indexFile, _ := os.Open(filename)
 		d := gob.NewDecoder(indexFile)
-		decodeErr := d.Decode(&index.storage)
+		decodeErr := d.Decode(&index)
 		if decodeErr != nil {
 			panic(decodeErr)
 		}
 		defer indexFile.Close()
 	} else {
-		index.storage = map[string][]string{}
+		index.Storage = map[string][]string{}
+		index.Domains = map[string]bool{}
 	}
 
 	return err
 }
 
 /*
-* checks if hash is already in storage returns bool
+* checks if hash is already in Storage returns bool
  */
 func (index *ind) contains(line string) bool {
 	var halfhash string
@@ -101,8 +104,8 @@ func (index *ind) contains(line string) bool {
 		halfhash = line[:hashKeySize]
 	}
 
-	if _, ok := index.storage[halfhash]; ok {
-		for _, v := range index.storage[halfhash] {
+	if _, ok := index.Storage[halfhash]; ok {
+		for _, v := range index.Storage[halfhash] {
 			if line == v {
 				return true
 			}
@@ -112,17 +115,49 @@ func (index *ind) contains(line string) bool {
 	return false
 }
 
+func (index *ind) checkAndAddDomain(domain string, newRecs *int) (added bool) {
+
+	added = false
+
+	if _, ok := index.Domains[domain]; !ok {
+		index.Domains[domain] = true
+		*newRecs++
+		added = true
+	}
+
+	return
+
+}
+
 /*
-* function so index type implements the io.Writer interface
+* generator that returns a chan of strings that
+* are all the hashses
  */
 func (index *ind) read() (hashes chan string) {
 	hashes = make(chan string, 1000)
 	go func() {
 		defer close(hashes)
-		for _, arr := range index.storage {
+		for _, arr := range index.Storage {
 			for _, hashSlice := range arr {
 				hashes <- hashSlice
 			}
+		}
+	}()
+	return
+}
+
+/*
+* generator that returns a chan of strings that
+* are all the domains
+ */
+func (index *ind) readDomains() (domains chan string) {
+	domains = make(chan string, 1000)
+	go func() {
+		defer close(domains)
+		for domain, _ := range index.Domains {
+
+			domains <- domain
+
 		}
 	}()
 	return
