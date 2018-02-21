@@ -46,7 +46,7 @@ func readUploadByLine(uploadName string, lineChan *chan string, readerGroup *syn
 
 }
 
-func readUploadDirectory(uploadDirectory string, lineChan *chan string) {
+func readUploadDirectory(uploadDirectory string, domainChan, lineChan *chan string) {
 	var readerGroup sync.WaitGroup
 
 	files, err := ioutil.ReadDir(uploadDirectory)

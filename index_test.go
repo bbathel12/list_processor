@@ -11,11 +11,11 @@ func Test_openIndex(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	//fmt.Println(index.storage)
+	//fmt.Println(index.Storage)
 }
 
 func Test_openWriteFile(t *testing.T) {
-	outFile := openWriteFile("./testCase/")
+	outFile := openWriteFile("./testCase/", ".txt")
 	if outFile == nil {
 		t.Error("No File Opened")
 	}
@@ -43,7 +43,7 @@ func Test_add(t *testing.T) {
 		testIndex.add(v)
 	}
 
-	if len(testIndex.storage) > 3 {
+	if len(testIndex.Storage) > 3 {
 		t.Error("added duplicate")
 	}
 
@@ -52,13 +52,13 @@ func Test_add(t *testing.T) {
 	}
 
 	for k, _ := range testKeyValues {
-		if _, ok := testIndex.storage[k]; !ok {
+		if _, ok := testIndex.Storage[k]; !ok {
 			errorString := fmt.Sprintf("key %s not found ", k)
 			t.Error(errorString)
 		}
 	}
 	for k, _ := range testKeyValues3 {
-		if _, ok := testIndex.storage[k]; !ok {
+		if _, ok := testIndex.Storage[k]; !ok {
 			errorString := fmt.Sprintf("key %s not found ", k)
 			t.Error(errorString)
 		}
@@ -69,7 +69,7 @@ func Test_add(t *testing.T) {
 func Test_writeIndex(t *testing.T) {
 	index := ind{
 		name: "./tests/index",
-		storage: map[string][]string{
+		Storage: map[string][]string{
 			"one":   []string{"1", "2", "3"},
 			"two":   []string{"1", "2", "3"},
 			"three": []string{"1", "2", "3"},
@@ -82,7 +82,7 @@ func Test_writeIndex(t *testing.T) {
 func Test_contains(t *testing.T) {
 	index := ind{
 		name: "testindex",
-		storage: map[string][]string{
+		Storage: map[string][]string{
 			"onet":  []string{"onetwo", "onetlu", "onetru"},
 			"two":   []string{"1", "2", "3"},
 			"three": []string{"1", "2", "3"},
