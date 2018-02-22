@@ -25,5 +25,5 @@ func Test_isMd5(t *testing.T) {
 }
 
 func Test_main(t *testing.T) {
-	t.Error("")
+
 }
