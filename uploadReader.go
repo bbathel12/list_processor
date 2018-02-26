@@ -12,7 +12,9 @@ import (
 
 func readUpload(uploadName string, lineChan *chan string, readerGroup *sync.WaitGroup) {
 	uploadBytes, err := ioutil.ReadFile(uploadName)
+
 	uploadString := string(uploadBytes)
+
 	if err != nil {
 		panic(err)
 	}
@@ -23,7 +25,6 @@ func readUpload(uploadName string, lineChan *chan string, readerGroup *sync.Wait
 		}
 		*lineChan <- line
 	}
-
 	defer readerGroup.Done()
 
 }

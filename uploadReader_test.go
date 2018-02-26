@@ -1,16 +1,20 @@
 package main
 
 import (
+	_ "fmt"
 	"sync"
 	"testing"
 )
 
-func test_readUpload(t *testing.T) {
-	lineChan := make(chan string)
+func Test_readUpload(t *testing.T) {
+	lineChan := make(chan string, 100)
 	var readerGroup sync.WaitGroup
-	readerGroup.Add(1)
 
-	readUpload("tests/list2.md5", &lineChan, &readerGroup)
+	readerGroup.Add(1)
+	go readUpload("tests/list2.md5", &lineChan, &readerGroup)
+	readerGroup.Wait()
+	close(lineChan)
+
 	testLines := [5]string{
 		"0CC175B9C0F1B6A831C399E269772661",
 		"92EB5FFEE6AE2FEC3AD71C777531578F",
@@ -19,24 +23,25 @@ func test_readUpload(t *testing.T) {
 		"E1671797C52E15F763380B45E841EC32",
 	}
 	i := 0
-	for {
 
-		v, ok := <-lineChan
-		if !ok {
-			break
-		} // if line
+	for v := range lineChan {
 		if testLines[i] != v {
 			t.Error(v, " Does Not Match ", testLines[i])
 		}
+		i++
 	}
+
 }
 
-func test_readUploadByLine(t *testing.T) {
-	lineChan := make(chan string)
+func Test_readUploadByLine(t *testing.T) {
+	lineChan := make(chan string, 100)
 	var readerGroup sync.WaitGroup
-	readerGroup.Add(1)
 
-	readUpload("tests/list2.md5", &lineChan, &readerGroup)
+	readerGroup.Add(1)
+	go readUpload("tests/list2.md5", &lineChan, &readerGroup)
+	readerGroup.Wait()
+	close(lineChan)
+
 	testLines := [5]string{
 		"0CC175B9C0F1B6A831C399E269772661",
 		"92EB5FFEE6AE2FEC3AD71C777531578F",
@@ -45,16 +50,14 @@ func test_readUploadByLine(t *testing.T) {
 		"E1671797C52E15F763380B45E841EC32",
 	}
 	i := 0
-	for {
-
-		v, ok := <-lineChan
-		if !ok {
-			break
-		} // if line
+	for v := range lineChan {
 		if testLines[i] != v {
 			t.Error(v, " Does Not Match ", testLines[i])
 		}
+		i++
 	}
+
+	readerGroup.Wait()
 }
 
 func Benchmark_readUpload(b *testing.B) {
@@ -71,8 +74,9 @@ func Benchmark_readUpload(b *testing.B) {
 			done <- true
 		}(&lineChan)
 
-		readUpload("tests/supplist.txt", &lineChan, &readerGroup)
+		readUpload("tests/uploads/supplist.txt", &lineChan, &readerGroup)
 		<-done
+		readerGroup.Wait()
 	}
 }
 
@@ -89,7 +93,8 @@ func Benchmark_readUploadByLine(b *testing.B) {
 			}
 			done <- true
 		}(&lineChan)
-		readUploadByLine("tests/supplist.txt", &lineChan, &readerGroup)
+		readUploadByLine("tests/uploads/supplist.txt", &lineChan, &readerGroup)
 		<-done
+		readerGroup.Wait()
 	}
 }
