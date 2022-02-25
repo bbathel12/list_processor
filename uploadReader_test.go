@@ -60,41 +60,47 @@ func Test_readUploadByLine(t *testing.T) {
 	readerGroup.Wait()
 }
 
-func Benchmark_readUpload(b *testing.B) {
-	var readerGroup sync.WaitGroup
-	readerGroup.Add(1)
-
-	for i := 0; i < b.N; i++ {
-		lineChan := make(chan string, 10)
-		done := make(chan bool)
-		go func(lineChan *chan string) {
-			for _ = range *lineChan {
-
-			}
-			done <- true
-		}(&lineChan)
-
-		readUpload("tests/uploads/supplist.txt", &lineChan, &readerGroup)
-		<-done
-		readerGroup.Wait()
-	}
-}
-
-func Benchmark_readUploadByLine(b *testing.B) {
-	var readerGroup sync.WaitGroup
-	readerGroup.Add(1)
-
-	for i := 0; i < b.N; i++ {
-		lineChan := make(chan string, 100)
-		done := make(chan bool)
-		go func(lineChan *chan string) {
-			for _ = range *lineChan {
-
-			}
-			done <- true
-		}(&lineChan)
-		readUploadByLine("tests/uploads/supplist.txt", &lineChan, &readerGroup)
-		<-done
-		readerGroup.Wait()
-	}
-}
+//
+//func Benchmark_readUpload(b *testing.B) {
+//
+//	for i := 0; i < b.N; i++ {
+//
+//		var readerGroup sync.WaitGroup
+//		readerGroup.Add(1)
+//		lineChan := make(chan string, 100)
+//		done := make(chan bool, 1)
+//		// I think this is just to empty out lineChan
+//		go func(lineChan *chan string) {
+//			for _ = range *lineChan {
+//
+//			}
+//			readerGroup.Wait()
+//			done <- true
+//		}(&lineChan)
+//
+//		readUpload("tests/uploads/supplist.txt", &lineChan, &readerGroup)
+//		<-done
+//		close(lineChan)
+//
+//	}
+//}
+//
+//func Benchmark_readUploadByLine(b *testing.B) {
+//	var readerGroup sync.WaitGroup
+//	readerGroup.Add(1)
+//
+//	for i := 0; i < b.N; i++ {
+//		lineChan := make(chan string, 100)
+//		done := make(chan bool, 1)
+//		go func(lineChan *chan string) {
+//			for _ = range *lineChan {
+//
+//			}
+//			done <- true
+//		}(&lineChan)
+//		readUploadByLine("tests/uploads/supplist.txt", &lineChan, &readerGroup)
+//		<-done
+//		readerGroup.Wait()
+//		close(lineChan)
+//	}
+//}

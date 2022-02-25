@@ -162,7 +162,7 @@ func Test_readDomains(t *testing.T) {
 }
 
 func Test_openWriteFile(t *testing.T) {
-	outFile := openWriteFile("./testCase/", ".txt")
+	outFile := openWriteFile("./testCase", ".txt")
 	if outFile == nil {
 		t.Error("No File Opened")
 	}
@@ -171,19 +171,19 @@ func Test_openWriteFile(t *testing.T) {
 func Benchmark_index_add(b *testing.B) {
 	index := newIndex("GoIndex")
 	for i := 0; i < b.N; i++ {
-		index.add(string(i))
+		index.add(fmt.Sprint(i))
 	}
 }
 
 func Benchmark_index_contains(b *testing.B) {
 	index := newIndex("GoIndex")
 	for i := 0; i < 10000; i++ {
-		index.add(string(i))
+		index.add(fmt.Sprint(i))
 	}
 
 	b.ResetTimer()
 	for j := 0; j < b.N; j++ {
-		index.contains(string(j))
+		index.contains(fmt.Sprint(j))
 	}
 }
 

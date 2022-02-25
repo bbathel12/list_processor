@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 )
@@ -31,7 +30,7 @@ func domainEmailMultiPlex(recs *int, lineChan, domainChan, hashedLineChan *chan 
 			*hashedLineChan <- trimmed
 			*recs++
 		default:
-			fmt.Println("no match")
+			//fmt.Println("no match",trimmed)
 			//save as errors maybe?
 		}
 

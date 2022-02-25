@@ -26,7 +26,7 @@ func loopForceMd5(emailChan, hashedLineChan *chan string) {
 
 func forceMd5(line string) (hashedTrimmed string) {
 
-	bytes := []byte(hashedTrimmed)
+	bytes := []byte(line)
 	hashedBytes := md5.Sum(bytes)
 	hashedTrimmed = fmt.Sprintf("%x", hashedBytes)
 
